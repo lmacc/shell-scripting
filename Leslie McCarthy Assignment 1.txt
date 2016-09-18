@@ -1,0 +1,78 @@
+#!/bin/bash
+# Shell program 
+# Leslie McCarthy DNET 2
+# Commented version.
+# Assignment 1
+echo -n "Please enter the name of the source directory: "
+read sdir
+if [[  -z "${sdir}" ]] # Check to see if nothing has been entered by the user.
+then
+	echo "${0}:ERROR: No directory name entered." 1>&2 # we want to send the output out on the standard error channel using 1>&2
+	# "${0}" always evaluates to the name of the script that contains the code.
+	It is always output with the error message so that the user can see which script is reporting the error.
+	echo "${0}:USAGE: Please enter name of an existing directory. " 1>&2
+	exit 10
+fi
+
+if [[ ! -d "${sdir}" ]]
+then
+	echo "${0}:ERROR: No source directory named ${sdir} exists." 1>&2
+	echo "${0}:USAGE: Please enter name of an existing directory " 1>&2
+	exit 9
+fi
+
+echo -n "Please enter the name of the file: "
+read filename #Type in the name of the file we are going to check if exists
+
+if [[ -z "${sdir}/${filename}" ]] #If nothing is entered for directory/filename. 
+then
+	echo "${0}:ERROR: No file name entered." 1>&2
+	echo "${0}:USAGE: Please enter the name of the file to copy " 1>&2
+	exit 8
+
+fi
+
+if [[ ! -f "${sdir}/${filename}" ]] #If the file name entered is not a file, or an ordinary file.
+then
+	echo "${0}:ERROR: No file named:  ${filename} exist in this directory " 1>&2
+	echo "${0}:USAGE: Please enter the correct file name. " 1<&2
+	exit 7
+fi
+
+echo -n "Please enter the name of the destination directory: "
+read directory
+if [[  -z "${directory}" ]] #if the user does not enter anything for directory.
+then 
+	echo "${0}:ERROR: No directory name entered. " 1>&2
+	echo "${0}:USAGE: Please enter the destination directory. " 1>&2
+	exit 6
+fi
+
+if [[ -d "${directory}" ]] #if the directory exists then we abort. 
+then 
+	echo "${0}:ERROR: Directory exists already. " 1>&2
+	echo "${0}:INFO: Enter a directory to be created . " 1>&2
+	exit 5
+fi
+
+if [[ ! -d "${directory}" ]] #if the directory does not exist then we will try to create one.
+then 
+	if [[ ! -e "${directory}" ]]
+	then
+		if mkdir ${directory} 2>/dev/null #Create a new directory "Directory name" and dump any errors.
+		then
+			echo "${0}:INFO:${directory} directory created. " 1>&2
+				
+				if cp "${sdir}/${filename}" "${directory}" #Copy file in source directory to new directory.
+				then 
+					echo "${0}:INFO:Source file ${filename} copied to destination directory ${directory}. " 1>&2
+					exit 0 # exit with success
+				else
+				echo "${0}:ERROR:${filename} could not be copied over. " 1>&2
+				echo "${0}:USAGE:Check permissions. " 1>&2
+				exit 1
+				fi
+
+		fi
+	fi
+fi

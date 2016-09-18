@@ -1,0 +1,94 @@
+#!/bin/bash
+# shell program
+# Leslie McCarthy
+# Assignment 2
+
+typeset -i copiedFiles=0 #Declare an integer variable called copiedFiles and set it to 0 
+
+typeset -i failedFiles=0 #Declare an integer variable called failedFiles and set it to 0
+
+#1. Check number of arguments given.
+if  (( $# < 2 )) #if there are less than 2 arguments provided
+ 		#then we need to tell the user we expect the
+ 		#<source directory> and <destination directory> in that order
+then
+ 	echo "${0}: ERROR: Incorrect number of arguments entered." 1>&2 #1>&2 Output user defined error messages to console only.
+	echo "${0}: USAGE: ${0} <directory> <filename>"  1>&2 
+
+	exit 4 
+
+fi
+#2. Check if the first argument is not a directory
+
+if [[ ! -d "${1}" ]] #if the first argument is not a directory.
+then
+	echo "${0}: ERROR: directory <${1}> does not exist." 1>&2
+	echo "${0}: USAGE: ${0} Enter <directory> name. " 1>&2
+	exit 5
+fi
+#3. Check if the source directory exists
+
+if [[  -d "${2}" ]] #if the destination directory exists then output an error. 
+then
+	echo "${0}: ERROR: directory <${2}> exists and cannot be used." 1>&2
+	echo "${0}: USAGE: ${0} Enter <directory> name to be created. " 1>&2
+	exit 6
+fi
+
+if [[ -f "${2}" ]] #if second argument is an existing file
+then
+	echo "${0}:ERROR: <${2}> exists as a file and cannot be used." 1>&2
+	echo "${0}:USAGE: ${0} Enter <directory> name to be created. " 1>&2
+	exit 7
+fi
+
+#Try to create a directory.
+
+if mkdir "${2}" 2>/dev/null #Suppress this warning if mkdir is unsuccessful. The following messages are to be displayed only.
+then
+	echo "${0}:INFO:Destination directory "${2}" has been created. " 1>&2
+
+		else
+			echo "${0}:ERROR:Destination directory <${2}> could not be created. " 1>&2
+			echo "${0}:USAGE:Check user permissions for creating directory <${2}>" 1>&2
+			exit 2
+fi
+
+
+
+	
+for file in $(ls "${1}") #loop through the directory.
+do		
+	if cp "${1}/${file}" "${2}" 2>/dev/null #Suppress warning here also, warning will be displayed below if cp command is unsuccessful. 	
+	then
+	((copiedFiles++)) #If there are files in the directory to copy then 'copiedFiles' will increment to the value of files in directory.
+
+	else
+	((failedFiles++)) #If there are no files in the directory/or a file in the directory has white space in the name e.g 'this file' then 'failedFiles' will 					increment by 1 to the value of files that can't be copied.
+	fi	
+done
+
+
+#If copiedFiles is greater than 0 and failedFiles is equal to 0 then we have copied all of the files over to the destination directory.
+if ((copiedFiles>0 && failedFiles==0)) 
+then
+	
+	echo "${0}:Sucess:Files have been copied to destination directory <${2}>" 1>&2	
+	exit 1 #With sucess
+	
+	#Else if copiedFiles and failedFiles is greater than 0 then we have copied some of the files over to the destination directory. Resulting in a partial 		fail	
+	elif ((copiedFiles>0 && failedFiles>0))
+	then
+		echo "${0}:Partial Fail:Not all files have been copied to directory <${2}>" 1>&2	
+		echo "${0}:INFO:Check user permissions. " 1>&2
+		exit 2
+			
+			#Else either there is nothing in the source directory to copy, or the file name in the directory has a white space in it's name. Resulting in 				an error. If this is the case then i added to the shell program, remove the empty directory that was created earlier.
+			else			
+			echo "${0}:ERROR:No files have been copied to destination directory <${2}>" 1>&2
+			echo "${0}:USAGE:Check if the source directory has files in it! " 1>&2
+			rm -r ${2} #Remove the directory that was created.
+			exit 3 #With error.
+	fi
+fi
+
